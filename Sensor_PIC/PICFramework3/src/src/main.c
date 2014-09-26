@@ -16,7 +16,7 @@
 #include "uart_thread.h"
 #include "timer1_thread.h"
 #include "timer0_thread.h"
-#include "init_debug.h"
+#include "init_debug.c"
 
 
 
@@ -332,7 +332,6 @@ void main(void) {
     // Make sure data in ADCON1 is right-aligned
     ADCON1bits.ADFM = 1; // right-aligned
     
-
     // Turn on A/D Module
     ADCON0bits.ADON = 1;
 

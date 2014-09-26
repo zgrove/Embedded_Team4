@@ -3,6 +3,7 @@
 #include "user_interrupts.h"
 #include "messages.h"
 #include "math.h"
+//#include "init_debug.c"
 
 //----------------------------------------------------------------------------
 // Note: This code for processing interrupts is configured to allow for high and
@@ -101,6 +102,7 @@ void InterruptHandlerHigh() {
     }
 
     if (PIR1bits.ADIF){
+        //DEBUG0(1);
         PIR1bits.ADIF = 0;
         unsigned short int a_d_result = 0;
         //a_d_result = ADRESH << 2 | (ADRESL >> 6);
