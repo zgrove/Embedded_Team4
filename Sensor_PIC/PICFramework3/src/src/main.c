@@ -16,7 +16,9 @@
 #include "uart_thread.h"
 #include "timer1_thread.h"
 #include "timer0_thread.h"
-#include "init_debug.c"
+#include "math.h"
+#include "init.h"
+#include "messageformat.h"
 
 
 
@@ -186,7 +188,6 @@ The PIC selected is not supported or the preprocessor directives are wrong.
 
 void main(void) {
     char c;
-    unsigned short int queue_data;
     signed char length;
     unsigned char msgtype;
     unsigned char last_reg_recvd;
@@ -197,8 +198,6 @@ void main(void) {
     uart_thread_struct uthread_data; // info for uart_lthread
     timer1_thread_struct t1thread_data; // info for timer1_lthread
     timer0_thread_struct t0thread_data; // info for timer0_lthread
-    
-    
 
 #ifdef __USE18F2680
     OSCCON = 0xFC; // see datasheet
@@ -223,9 +222,6 @@ void main(void) {
 #endif
 #endif
 #endif
-
-    // initialize debugging bits
-    init_debug();
 
     // initialize my uart recv handling code
     init_uart_recv(&uc);
@@ -284,8 +280,7 @@ void main(void) {
     // They *are* changed in the timer interrupt handlers if those timers are
     //   enabled.  They are just there to make the lights blink and can be
     //   disabled.
-    i2c_configure_slave(0x80);
-    // NOTE: The address is actually shifted to the right by one so the actual address is 0x40
+    i2c_configure_slave(0x9E);
 #else
     // If I want to test the temperature sensor from the ARM, I just make
     // sure this PIC does not have the same address and configure the
@@ -310,40 +305,6 @@ void main(void) {
 #ifdef __USE18F46J50
     Open1USART(USART_TX_INT_OFF & USART_RX_INT_ON & USART_ASYNCH_MODE & USART_EIGHT_BIT &
         USART_CONT_RX & USART_BRGH_LOW, 0x19);
-
-    TRISAbits.TRISA0 = 1;
-    // Setting up AN0 in ANCON0 register for analog input
-    ANCON0bits.PCFG0 = 0;
-
-    // Setting up on-board voltage reference using VCFG0 for ground
-    // and VCFG1 for the input voltage within ADCON0 register
-    ADCON0bits.VCFG0 = 0;
-    //
-    ADCON0bits.VCFG1 = 0;
-
-    // Selecting AN0 as channel for input
-    ADCON0bits.CHS = 0000;
-
-    // Setting up time acquisition settings
-    ADCON1bits.ADCAL = 0;
-    ADCON1bits.ACQT = 0x01;
-    ADCON1bits.ADCS = 0x06; //110
-
-    // Make sure data in ADCON1 is right-aligned
-    ADCON1bits.ADFM = 1; // right-aligned
-    
-    // Turn on A/D Module
-    ADCON0bits.ADON = 1;
-
-    // Clear A/D Flag
-    PIR1bits.ADIF = 0;
-
-    // Set A/D Converter Interrupt Enable
-    PIE1bits.ADIE = 1;
-
-    // Set Global Interrupt Enable
-    INTCONbits.GIE = 1;
-
 #else
     OpenUSART(USART_TX_INT_OFF & USART_RX_INT_ON & USART_ASYNCH_MODE & USART_EIGHT_BIT &
         USART_CONT_RX & USART_BRGH_LOW, 0x19);
@@ -366,6 +327,45 @@ void main(void) {
     // It is also slow and is blocking, so it will perturb your code's operation
     // Here is how it looks: printf("Hello\r\n");
 
+    typedef struct {
+        unsigned short int data;
+        unsigned char id;
+        unsigned char seq;
+        unsigned short int empty;
+    } sensor_stuff;
+
+    sensor_stuff sense0;
+    sense0.data = 0;
+    sense0.id = 0xFF;
+    sense0.seq = 0;
+    sense0.empty = 1;
+
+    sensor_stuff sense1;
+    sense1.data = 0;
+    sense1.id = 0xFF;
+    sense1.seq = 0;
+    sense1.empty = 1;
+
+    // Sets specified PORTB bits as outputs for debugging
+    TRISBbits.TRISB0 = 0;
+    TRISBbits.TRISB1 = 0;
+    TRISBbits.TRISB2 = 0;
+    TRISBbits.TRISB3 = 0;
+    TRISBbits.TRISB4 = 0;
+    TRISBbits.TRISB5 = 0;
+
+    init_debug();
+
+    // Initialize array to store sensor values
+    sensor_stuff sensor_array[2];
+    sensor_array[0] = sense0;
+    sensor_array[1] = sense1;
+
+    struct message msg;
+
+    // Initialize A/D stuff
+    init_ad();
+    //
 
     // loop forever
     // This loop is responsible for "handing off" messages to the subroutines
@@ -405,8 +405,24 @@ void main(void) {
                     break;
                 };
                 case MSGT_AD_DATA:
-                    queue_data = *(unsigned short int*) msgbuffer;
+                {
+                    //set_debug('c');
+                    unsigned short int val = msgbuffer[1];
+                    val = (val << 8 ) | msgbuffer[0];
+                    //val = 1.4*(9462 / (val - 16.92));
+                    //float converted = 61.337 * pow(val, -1.209);
+                    float converted = 1.45 * (9462 / (val - 16.92));
+                    unsigned short int trunc = (int)converted;
+
+                    sensor_array[0].data = trunc;
+                    sensor_array[0].id = 0x0;
+                    sensor_array[0].empty = 0;
+
+                    sensor_array[1].data = 0x66;
+                    sensor_array[1].id = 0x1;
+                    sensor_array[1].empty = 0;
                     break;
+                };
                 case MSGT_I2C_RQST:
                 {
                     // Generally, this is *NOT* how I recommend you handle an I2C slave request
@@ -420,28 +436,66 @@ void main(void) {
                         case 0xaa:
                         {
                             length = 2;
-                            msgbuffer[0] = queue_data | 0xFF;
-                            msgbuffer[1] = (queue_data >> 8) | 0xFF;
+                            msgbuffer[0] = 0x55;
+                            msgbuffer[1] = 0xAA;
+                            start_i2c_slave_reply(length, msgbuffer);
                             break;
                         }
-                        /*case 0xa8:
+                        case 0xa8:
                         {
                             length = 1;
                             msgbuffer[0] = 0x3A;
+                            start_i2c_slave_reply(length, msgbuffer);
                             break;
                         }
                         case 0xa9:
                         {
                             length = 1;
                             msgbuffer[0] = 0xA3;
+                            start_i2c_slave_reply(length, msgbuffer);
                             break;
-                        }*/
+                        }
+                        case MSG_CODE_IR1:
+                        {
+                            set_debug('c');
+                            length = 4;
+                            init_msg(& msg);
+                            if (sensor_array[0].empty) {
+                                set_msg_empty(& msg);
+                            }
+                            else {
+                                set_msg_data(& msg, sensor_array[0].data);
+                                sensor_array[0].empty = 1;
+                                //start_i2c_slave_reply(length, &msg);
+                            }
+                                set_msg_code(& msg, MSG_CODE_IR1);
+                                set_msg_seq(& msg, sensor_array[0].seq);
+                                sensor_array[0].seq++;
+                                add_msg_crc(& msg);
+                            start_i2c_slave_reply(length, &msg);
+                            break;
+                        }
+                        case MSG_CODE_IR2:
+                        {
+                            set_debug('c');
+                            length = 4;
+                            init_msg(& msg);
+                            if (sensor_array[1].empty) {
+                                set_msg_empty(& msg);
+                            }
+                            else {
+                                set_msg_data(& msg, sensor_array[1].data);
+                                sensor_array[1].empty = 1;
+                                //start_i2c_slave_reply(length, &msg);
+                            }
+                            set_msg_code(& msg, MSG_CODE_IR2);
+                            set_msg_seq(& msg, sensor_array[1].seq);
+                            sensor_array[1].seq++;
+                            add_msg_crc(& msg);
+                            start_i2c_slave_reply(length, &msg);
+                            break;
+                        }
                     };
-                    //start_i2c_slave_reply(length, msgbuffer);
-                    if (!uthread_data.read)
-                        start_i2c_slave_reply(uthread_data.size, uthread_data.data);
-                    else
-                        start_i2c_slave_reply(0,0);
                     break;
                 };
                 default:

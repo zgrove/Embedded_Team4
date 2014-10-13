@@ -47,5 +47,6 @@ void timer1_int_handler() {
     // reset the timer
     WriteTimer1(0);
 
+    // Set the A/D GO bit
     ADCON0bits.GO = 1;
 }
