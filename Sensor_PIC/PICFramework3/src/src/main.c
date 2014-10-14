@@ -409,9 +409,10 @@ void main(void) {
                     //set_debug('c');
                     unsigned short int val = msgbuffer[1];
                     val = (val << 8 ) | msgbuffer[0];
+                    //float actual_volt = val * 0.00488;
                     //val = 1.4*(9462 / (val - 16.92));
-                    //float converted = 61.337 * pow(val, -1.209);
-                    float converted = 1.45 * (9462 / (val - 16.92));
+                    //float converted = 61.337 * pow(actual_volt, -1.209);
+                    float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
 
                     sensor_array[0].data = trunc;

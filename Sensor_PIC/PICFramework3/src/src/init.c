@@ -8,10 +8,10 @@ void init_ad() {
     ADCON1bits.PCFG = 0x0;
 
     // Set voltage reference config bits
-    // V_REF-
-    ADCON1bits.VCFG1 = 1;
-    // V_REF+
-    ADCON1bits.VCFG0 = 1;
+    // V_SS = 0  V_REF- = 1
+    ADCON1bits.VCFG1 = 0;
+    // V_SS = 1  V_REF+ = 1
+    ADCON1bits.VCFG0 = 0;
 
     // Select A/D input channel
     // Set A/D Calibration bit
