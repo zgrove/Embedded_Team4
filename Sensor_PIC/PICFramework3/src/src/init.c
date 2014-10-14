@@ -39,7 +39,6 @@ void init_ad() {
     PIE1bits.ADIE = 1;
     // Set Global Interrupt Enable
     INTCONbits.GIE = 1;
-    set_debug('b');
 }
 
 // Initializes Debug bits
@@ -75,6 +74,8 @@ void set_debug(unsigned char op) {
         };
         default:
         {
+            LATBbits.LATB4 = 1;
+            init_debug();
             break;
         };
     };

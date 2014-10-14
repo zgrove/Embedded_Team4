@@ -2,6 +2,7 @@
 #include "interrupts.h"
 #include "user_interrupts.h"
 #include "messages.h"
+#include "init.h"
 
 //----------------------------------------------------------------------------
 // Note: This code for processing interrupts is configured to allow for high and
@@ -104,7 +105,6 @@ void InterruptHandlerHigh() {
     // This is where the data has been converted in A/D
     // It checks if the ADIF Flag has been set
     if (PIR1bits.ADIF){
-        //set_debug('a');
         PIR1bits.ADIF = 0;
         unsigned short int a_d_result = 0;
         a_d_result = (ADRESH << 8 ) | ADRESL;
@@ -112,6 +112,12 @@ void InterruptHandlerHigh() {
 
         ToMainHigh_sendmsg(2, MSGT_AD_DATA, &a_d_result);
     }
+
+    if (PIR1bits.TMR2IF) {
+        PIR1bits.TMR2IF = 0;
+        timer2_int_handler();
+    }
+
 
     // The *last* thing I do here is check to see if we can
     // allow the processor to go to sleep

@@ -264,6 +264,20 @@ void main(void) {
 #endif
 #endif
 
+//#ifdef T2_ENABLE
+    /* base clock for T2 is Fosc/4 (instruction clock) == 48MHz/4 */
+    T2CONbits.T2CKPS = 2; /* prescale by 16 */
+    //T2CONbits.T2OUTPS = 0xe; /* postscale by 15 */
+    T2CONbits.T2OUTPS3 = 1;
+    T2CONbits.T2OUTPS2 = 1;
+    T2CONbits.T2OUTPS1 = 1;
+    T2CONbits.T2OUTPS0 = 0;
+    PR2 = 50; /* so .. 48MHz/4/16/15/50 = 1kHz = period 1ms */
+    PIE1bits.TMR2IE = 1;
+    T2CONbits.TMR2ON = 1;
+//#endif /* T2_ENABLE */
+
+
     // Decide on the priority of the enabled peripheral interrupts
     // 0 is low, 1 is high
     // Timer1 interrupt
@@ -272,6 +286,8 @@ void main(void) {
     IPR1bits.RCIP = 0;
     // I2C interrupt
     IPR1bits.SSPIP = 1;
+    // Timer2 interrupt (used to control sampling)
+    IPR1bits.TMR2IP = 1;
 
     // configure the hardware i2c device as a slave (0x9E -> 0x4F) or (0x9A -> 0x4D)
 #if 1
@@ -406,7 +422,6 @@ void main(void) {
                 };
                 case MSGT_AD_DATA:
                 {
-                    //set_debug('c');
                     unsigned short int val = msgbuffer[1];
                     val = (val << 8 ) | msgbuffer[0];
                     //float actual_volt = val * 0.00488;
@@ -458,7 +473,6 @@ void main(void) {
                         }
                         case MSG_CODE_IR1:
                         {
-                            set_debug('c');
                             length = 4;
                             init_msg(& msg);
                             if (sensor_array[0].empty) {
@@ -478,7 +492,6 @@ void main(void) {
                         }
                         case MSG_CODE_IR2:
                         {
-                            set_debug('c');
                             length = 4;
                             init_msg(& msg);
                             if (sensor_array[1].empty) {
