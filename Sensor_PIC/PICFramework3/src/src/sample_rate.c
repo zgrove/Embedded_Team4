@@ -16,12 +16,12 @@ void timer2_int_handler()
   if ((count % SAMPPERIOD(US2)) == 1)
   if ((count % SAMPPERIOD(US3)) == 2)
 */
-  if ((count % SAMPPERIOD(IR1)) == 0) {
+  if ((count % SAMPPERIOD(IR1)) == 3) {
       // Set the A/D GO bit
       ADCON0bits.GO = 1;
       set_debug('f');
   }
-  if ((count % SAMPPERIOD(IR2)) == 0) {
+  if ((count % SAMPPERIOD(IR2)) == 4) {
       // Set the A/D GO bit
       //ADCON0bits.GO = 1;
   }
@@ -35,13 +35,14 @@ void timer2_int_handler()
 void timer2_configure()
 {
   /* base clock for T2 is Fosc/4 (instruction clock) == 48MHz/4 */
-  T2CONbits.T2CKPS = 2; /* prescale by 16 */
+  /* Ignore the above comment since Mark III freq is 12MHz*/
+  T2CONbits.T2CKPS = 1; /* prescale by 4 */
   //T2CONbits.T2OUTPS = 0xe; /* postscale by 15 */
   T2CONbits.T2OUTPS3 = 1;
   T2CONbits.T2OUTPS2 = 1;
   T2CONbits.T2OUTPS1 = 1;
   T2CONbits.T2OUTPS0 = 0;
-  PR2 = 50; /* so .. 48MHz/4/16/15/50 = 1kHz = period 1ms */
+  PR2 = 50; /* so .. 12MHz/4/4/15/50 = 1kHz = period 1ms */
   PIE1bits.TMR2IE = 1;
   T2CONbits.TMR2ON = 1;
 }

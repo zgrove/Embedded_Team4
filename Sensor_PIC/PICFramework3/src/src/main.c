@@ -266,13 +266,14 @@ void main(void) {
 
 //#ifdef T2_ENABLE
     /* base clock for T2 is Fosc/4 (instruction clock) == 48MHz/4 */
-    T2CONbits.T2CKPS = 2; /* prescale by 16 */
+    /* Ignore the above comment since Mark III freq is 12MHz*/
+    T2CONbits.T2CKPS = 1; /* prescale by 4 */
     //T2CONbits.T2OUTPS = 0xe; /* postscale by 15 */
     T2CONbits.T2OUTPS3 = 1;
     T2CONbits.T2OUTPS2 = 1;
     T2CONbits.T2OUTPS1 = 1;
     T2CONbits.T2OUTPS0 = 0;
-    PR2 = 50; /* so .. 48MHz/4/16/15/50 = 1kHz = period 1ms */
+    PR2 = 50; /* so .. 12MHz/4/4/15/50 = 1kHz = period 1ms */
     PIE1bits.TMR2IE = 1;
     T2CONbits.TMR2ON = 1;
 //#endif /* T2_ENABLE */
