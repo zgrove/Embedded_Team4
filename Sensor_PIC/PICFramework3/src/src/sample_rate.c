@@ -2,6 +2,7 @@
 #include "sample_rate.h"
 #include "messageformat.h"
 #include "init.h"
+#include "uart_tx.h"
 
 #define SAMPPERIOD(sensor) (8 * T2_PERIOD * 1000 / SAMPRATE_##sensor)
 
@@ -21,14 +22,16 @@ void timer2_int_handler()
       ADCON0bits.GO = 1;
       //set_debug('f');
   }
-  if ((count % SAMPPERIOD(IR2)) == 4) {
+  /*if ((count % SAMPPERIOD(IR2)) == 4) {
       // Set the A/D GO bit
       //ADCON0bits.GO = 1;
-  }
+  }*/
 /*
   if ((count % SAMPPERIOD(GYX)) == 5)
   if ((count % SAMPPERIOD(GYY)) == 6)
 */
+  /*if (count % 1000 == 0)
+      uart_tx_bytes("hello!\r\n", 8);*/
   ++count;
 }
 

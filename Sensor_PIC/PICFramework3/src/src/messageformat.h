@@ -5,11 +5,11 @@
 
 #define MESSAGEFORMAT_VERSION 102
 
-#define MSG_CODE_US1    1
-#define MSG_CODE_US2    2
-#define MSG_CODE_US3    3
-#define MSG_CODE_IR1    4
-#define MSG_CODE_IR2    5
+#define MSG_CODE_IR1    1
+#define MSG_CODE_IR2    2
+#define MSG_CODE_IR3    3
+#define MSG_CODE_IR4    4
+#define MSG_CODE_IR5    5
 #define MSG_CODE_GYX    6
 #define MSG_CODE_GYY    7
 #define MSG_CODE_ENC1   8

@@ -252,7 +252,7 @@ void main(void) {
      */
 
     // initialize Timers
-    OpenTimer0(TIMER_INT_ON & T0_16BIT & T0_SOURCE_INT & T0_PS_1_128);
+    //OpenTimer0(TIMER_INT_ON & T0_16BIT & T0_SOURCE_INT & T0_PS_1_128);
     
 #ifdef __USE18F26J50
     // MTJ added second argument for OpenTimer1()
@@ -261,7 +261,7 @@ void main(void) {
 #ifdef __USE18F46J50
     OpenTimer1(TIMER_INT_ON & T1_SOURCE_FOSC_4 & T1_PS_1_8 & T1_16BIT_RW & T1_OSC1EN_OFF & T1_SYNC_EXT_OFF,0x0);
 #else
-    OpenTimer1(TIMER_INT_ON & T1_PS_1_8 & T1_16BIT_RW & T1_SOURCE_INT & T1_OSC1EN_OFF & T1_SYNC_EXT_OFF);
+    //OpenTimer1(TIMER_INT_ON & T1_PS_1_8 & T1_16BIT_RW & T1_SOURCE_INT & T1_OSC1EN_OFF & T1_SYNC_EXT_OFF);
 #endif
 #endif
 
@@ -331,12 +331,26 @@ void main(void) {
 #endif
 #endif
 
-    for (;;) {
-        uart_tx_bytes("Hello!\r\n", 8);
-    }
+    init_debug();
+
+    struct ring_buffer uart_tx_buffer;
+    unsigned char uart_tx_buffer_data[UARTTXBUFLEN];
+    uart_tx_buffer.data = uart_tx_buffer_data;
+
+    init_uart_transmit(&uart_tx_buffer, UARTTXBUFLEN);
+    OpenUSART(USART_TX_INT_ON & USART_RX_INT_OFF & USART_ASYNCH_MODE & USART_EIGHT_BIT &
+        USART_CONT_RX & USART_BRGH_HIGH, 77);
+
+    /*9600 Baud Rate*/
+    //uart_tx_config(9600);
+
     // Peripheral interrupts can have their priority set to high or low
     // enable high-priority interrupts and low-priority interrupts
     enable_interrupts();
+
+    /*for (;;) {
+        uart_tx_bytes("Hello!\r\n", 8);
+    }*/
 
     /* Junk to force an I2C interrupt in the simulator (if you wanted to)
     PIR1bits.SSPIF = 1;
@@ -358,16 +372,9 @@ void main(void) {
     TRISBbits.TRISB4 = 0;
     TRISBbits.TRISB5 = 0;
 
-    init_debug();
+    
 
-    struct ring_buffer uart_tx_buffer;
-    unsigned char uart_tx_buffer_data[UARTTXBUFLEN];
-    uart_tx_buffer.data = uart_tx_buffer_data;
-
-    init_uart_transmit(&uart_tx_buffer, UARTTXBUFLEN);
-    OpenUSART(USART_TX_INT_ON & USART_RX_INT_OFF & USART_ASYNCH_MODE & USART_EIGHT_BIT &
-        USART_CONT_RX & USART_BRGH_LOW, 77);
-    uart_tx_config(9600);
+    
 
     typedef struct {
         unsigned short int data;
@@ -388,12 +395,32 @@ void main(void) {
     sense1.seq = 0;
     sense1.empty = 1;
 
+    sensor_stuff sense2;
+    sense2.data = 0;
+    sense2.id = 0xFF;
+    sense2.seq = 0;
+    sense2.empty = 1;
+
+    sensor_stuff sense3;
+    sense3.data = 0;
+    sense3.id = 0xFF;
+    sense3.seq = 0;
+    sense3.empty = 1;
+
+    sensor_stuff sense4;
+    sense4.data = 0;
+    sense4.id = 0xFF;
+    sense4.seq = 0;
+    sense4.empty = 1;
     
 
     // Initialize array to store sensor values
-    sensor_stuff sensor_array[2];
+    sensor_stuff sensor_array[5];
     sensor_array[0] = sense0;
     sensor_array[1] = sense1;
+    sensor_array[2] = sense2;
+    sensor_array[3] = sense3;
+    sensor_array[4] = sense4;
 
     struct message msg;
 
@@ -438,7 +465,7 @@ void main(void) {
                     last_reg_recvd = msgbuffer[0];
                     break;
                 };
-                case MSGT_AD_DATA:
+                case MSGT_AD_DATA1:
                 {
                     unsigned short int val = msgbuffer[1];
                     val = (val << 8 ) | msgbuffer[0];
@@ -447,14 +474,177 @@ void main(void) {
                     //float converted = 61.337 * pow(actual_volt, -1.209);
                     float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
+                    unsigned char buff[10];
+                    int n;
+                    n = sprintf(buff, "%d:0\r\n", trunc);
+                    uart_tx_bytes(buff, n);
 
                     sensor_array[0].data = trunc;
                     sensor_array[0].id = 0x0;
                     sensor_array[0].empty = 0;
 
-                    sensor_array[1].data = 0x66;
+                    // make messages here
+                    // from high send
+                    length = 4;
+                    init_msg(& msg);
+                    if (sensor_array[0].empty) {
+                        set_msg_empty(& msg);
+                    }
+                    else {
+                        set_msg_data(& msg, sensor_array[0].data);
+                        sensor_array[0].empty = 1;
+                    }
+                    set_msg_code(& msg, MSG_CODE_IR1);
+                    set_msg_seq(& msg, sensor_array[0].seq);
+                    sensor_array[0].seq++;
+                    add_msg_crc(& msg);
+                    FromMainHigh_sendmsg(length,MSGT_AD_DATA1,&msg);
+
+                    //sensor_array[1].data = 0x66;
+                    //sensor_array[1].id = 0x1;
+                    //sensor_array[1].empty = 0;
+                    break;
+                };
+                case MSGT_AD_DATA2:
+                {
+                    unsigned short int val = msgbuffer[1];
+                    val = (val << 8 ) | msgbuffer[0];
+                    float converted = 1.7 * (9462 / (val - 16.92));
+                    unsigned short int trunc = (int)converted;
+                    unsigned char buff[10];
+                    int n;
+                    n = sprintf(buff, "%d:1\r\n", trunc);
+                    uart_tx_bytes(buff, n);
+
+                    sensor_array[1].data = trunc;
                     sensor_array[1].id = 0x1;
                     sensor_array[1].empty = 0;
+
+                    // make messages here
+                    // from high send
+                    length = 4;
+                    init_msg(& msg);
+                    if (sensor_array[1].empty) {
+                        set_msg_empty(& msg);
+                    }
+                    else {
+                        set_msg_data(& msg, sensor_array[1].data);
+                        sensor_array[1].empty = 1;
+                    }
+                    set_msg_code(& msg, MSG_CODE_IR2);
+                    set_msg_seq(& msg, sensor_array[1].seq);
+                    sensor_array[1].seq++;
+                    add_msg_crc(& msg);
+                    FromMainHigh_sendmsg(length,MSGT_AD_DATA2,&msg);
+
+                    break;
+                };
+                case MSGT_AD_DATA3:
+                {
+                    unsigned short int val = msgbuffer[1];
+                    val = (val << 8 ) | msgbuffer[0];
+                    float converted = 1.7 * (9462 / (val - 16.92));
+                    unsigned short int trunc = (int)converted;
+                    unsigned char buff[10];
+                    int n;
+                    n = sprintf(buff, "%d:2\r\n", trunc);
+                    uart_tx_bytes(buff, n);
+
+                    sensor_array[2].data = trunc;
+                    sensor_array[2].id = 0x2;
+                    sensor_array[2].empty = 0;
+
+                    // make messages here
+                    // from high send
+                    length = 4;
+                    init_msg(& msg);
+                    if (sensor_array[2].empty) {
+                        set_msg_empty(& msg);
+                    }
+                    else {
+                        set_msg_data(& msg, sensor_array[2].data);
+                        sensor_array[2].empty = 1;
+                    }
+                    set_msg_code(& msg, MSG_CODE_IR3);
+                    set_msg_seq(& msg, sensor_array[2].seq);
+                    sensor_array[2].seq++;
+                    add_msg_crc(& msg);
+                    FromMainHigh_sendmsg(length,MSGT_AD_DATA3,&msg);
+
+                    break;
+                };
+                case MSGT_AD_DATA4:
+                {
+                    unsigned short int val = msgbuffer[1];
+                    val = (val << 8 ) | msgbuffer[0];
+                    /*Change the formula*/
+                    //float converted = 1.7 * (9462 / (val - 16.92));
+                    float converted = 27 / val;
+                    unsigned short int trunc = (int)converted;
+                    unsigned char buff[50];
+                    int n;
+                    //n = sprintf(buff, "%d:3\r\n", trunc);
+                    n = sprintf(buff, "%d:3\r\n", 17);
+                    uart_tx_bytes(buff, n);
+
+                    sensor_array[3].data = trunc;
+                    sensor_array[3].id = 0x3;
+                    sensor_array[3].empty = 0;
+
+                    // make messages here
+                    // from high send
+                    length = 4;
+                    init_msg(& msg);
+                    if (sensor_array[3].empty) {
+                        set_msg_empty(& msg);
+                    }
+                    else {
+                        set_msg_data(& msg, sensor_array[3].data);
+                        sensor_array[3].empty = 1;
+                    }
+                    set_msg_code(& msg, MSG_CODE_IR4);
+                    set_msg_seq(& msg, sensor_array[3].seq);
+                    sensor_array[3].seq++;
+                    add_msg_crc(& msg);
+                    FromMainHigh_sendmsg(length,MSGT_AD_DATA4,&msg);
+
+                    break;
+                };
+                case MSGT_AD_DATA5:
+                {
+                    unsigned short int val = msgbuffer[1];
+                    val = (val << 8 ) | msgbuffer[0];
+                    /*Change the formula*/
+                    //float converted = 1.7 * (9462 / (val - 16.92));
+                    float converted = 27 / val;
+                    unsigned short int trunc = (int)converted;
+                    unsigned char buff[10];
+                    int n;
+                    //n = sprintf(buff, "%d:4\r\n", trunc);
+                    n = sprintf(buff, "%d:4\r\n", 18);
+                    uart_tx_bytes(buff, n);
+
+                    sensor_array[4].data = trunc;
+                    sensor_array[4].id = 0x4;
+                    sensor_array[4].empty = 0;
+
+                    // make messages here
+                    // from high send
+                    length = 4;
+                    init_msg(& msg);
+                    if (sensor_array[4].empty) {
+                        set_msg_empty(& msg);
+                    }
+                    else {
+                        set_msg_data(& msg, sensor_array[2].data);
+                        sensor_array[4].empty = 1;
+                    }
+                    set_msg_code(& msg, MSG_CODE_IR5);
+                    set_msg_seq(& msg, sensor_array[4].seq);
+                    sensor_array[4].seq++;
+                    add_msg_crc(& msg);
+                    FromMainHigh_sendmsg(length,MSGT_AD_DATA5,&msg);
+
                     break;
                 };
                 case MSGT_I2C_RQST:
@@ -489,7 +679,7 @@ void main(void) {
                             start_i2c_slave_reply(length, msgbuffer);
                             break;
                         }
-                        case MSG_CODE_IR1:
+                        /*case MSG_CODE_IR1:
                         {
                             length = 4;
                             init_msg(& msg);
@@ -526,7 +716,7 @@ void main(void) {
                             add_msg_crc(& msg);
                             start_i2c_slave_reply(length, &msg);
                             break;
-                        }
+                        }*/
                     };
                     break;
                 };

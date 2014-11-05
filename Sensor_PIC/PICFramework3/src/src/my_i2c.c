@@ -107,8 +107,7 @@ void i2c_int_handler() {
     unsigned char msg_to_send = 0;
     unsigned char overrun_error = 0;
     unsigned char error_buf[3];
-    unsigned char last_reg_recvd;
-    unsigned char length;
+    unsigned char msgtype;
 
     // clear SSPOV
     if (SSPCON1bits.SSPOV == 1) {
@@ -168,6 +167,10 @@ void i2c_int_handler() {
                             msg_to_send = 1;
                             // don't let the clock stretching bit be let go
                             data_read = 0;
+
+                            //from high recv -> ic_ptr->outbuffer
+                            //if (MSGQUEUE_EMPTY) send NULL DATA
+                            FromMainHigh_recvmsg(MSGLEN, &msgtype, ic_ptr->outbuffer);
                         }
                     } else {
                         ic_ptr->error_count++;
@@ -260,29 +263,7 @@ void i2c_int_handler() {
         ic_ptr->error_count = 0;
     }
     if (msg_to_send) {
-        // send to the queue to *ask* for the data to be sent out
-        //ToMainHigh_sendmsg(0, MSGT_I2C_RQST, (void *) ic_ptr->buffer);
-        /*switch (last_reg_recvd) {
-            case MSG_CODE_IR1:
-                {
-                    length = 4;
-                    init_msg(& msg);
-                    if (sensor_array[0].empty) {
-                        set_msg_empty(& msg);
-                    }
-                    else {
-                        set_msg_data(& msg, sensor_array[0].data);
-                        sensor_array[0].empty = 1;
-                        //start_i2c_slave_reply(length, &msg);
-                    }
-                        set_msg_code(& msg, MSG_CODE_IR1);
-                        set_msg_seq(& msg, sensor_array[0].seq);
-                        sensor_array[0].seq++;
-                        add_msg_crc(& msg);
-                    start_i2c_slave_reply(length, &msg);
-                    break;
-                }
-        }*/
+        
         msg_to_send = 0;
     }
 }

@@ -25,12 +25,12 @@ static struct ring_buffer * utb;
  */
 int uart_tx_bytes(const void * d, int l)
 {
-  set_debug('a');
+  //set_debug('a');
   int i;
   /* given, struct ring_buffer * uart_tx_buffer (utb) */
 
   if (utb->size - utb->count < l) {
-      set_debug('b');
+      //set_debug('b');
       return 0;
   }
 
@@ -47,7 +47,7 @@ int uart_tx_bytes(const void * d, int l)
   /* unmask UART TX interrupt - if it was off before it needs to be on now */
   PIE1bits.TX1IE = 1;
 #endif
-  set_debug('z');
+  //set_debug('z');
   return l;
 }
 

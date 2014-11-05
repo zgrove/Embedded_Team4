@@ -117,9 +117,24 @@ void InterruptHandlerHigh() {
         PIR1bits.ADIF = 0;
         unsigned short int a_d_result = 0;
         a_d_result = (ADRESH << 8 ) | ADRESL;
-        ///////a_d_result = 2*(9462 / (a_d_result - 16.92));
 
-        ToMainHigh_sendmsg(2, MSGT_AD_DATA, &a_d_result);
+        if (ADCON0bits.CHS == 0x0)
+            ToMainHigh_sendmsg(2, MSGT_AD_DATA1, &a_d_result);
+        else if (ADCON0bits.CHS == 0x1)
+            ToMainHigh_sendmsg(2, MSGT_AD_DATA2, &a_d_result);
+        else if (ADCON0bits.CHS == 0x2)
+            ToMainHigh_sendmsg(2, MSGT_AD_DATA3, &a_d_result);
+        else if (ADCON0bits.CHS == 0x3)
+            ToMainHigh_sendmsg(2, MSGT_AD_DATA4, &a_d_result);
+        else if (ADCON0bits.CHS == 0x4)
+            ToMainHigh_sendmsg(2, MSGT_AD_DATA5, &a_d_result);
+        
+        /*Change analog input*/
+        /*Will need to change this if more analog sensors are used*/
+        if (ADCON0bits.CHS == 0x4)
+            ADCON0bits.CHS = 0x0;
+        else
+            ADCON0bits.CHS++;
     }
 
     if (PIR1bits.TMR2IF) {
