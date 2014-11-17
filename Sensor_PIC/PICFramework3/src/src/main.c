@@ -469,10 +469,10 @@ void main(void) {
                 {
                     unsigned short int val = msgbuffer[1];
                     val = (val << 8 ) | msgbuffer[0];
-                    //float actual_volt = val * 0.00488;
+                    float actual_volt = val * 0.0032226;
                     //val = 1.4*(9462 / (val - 16.92));
-                    //float converted = 61.337 * pow(actual_volt, -1.209);
-                    float converted = 1.7 * (9462 / (val - 16.92));
+                    float converted = 61.337 * pow(actual_volt, -1.209);
+                    //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
                     unsigned char buff[10];
                     int n;
@@ -509,7 +509,10 @@ void main(void) {
                 {
                     unsigned short int val = msgbuffer[1];
                     val = (val << 8 ) | msgbuffer[0];
-                    float converted = 1.7 * (9462 / (val - 16.92));
+                    float actual_volt = val * 0.0032226;
+                    //val = 1.4*(9462 / (val - 16.92));
+                    float converted = 61.337 * pow(actual_volt, -1.209);
+                    //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
                     unsigned char buff[10];
                     int n;
@@ -543,7 +546,10 @@ void main(void) {
                 {
                     unsigned short int val = msgbuffer[1];
                     val = (val << 8 ) | msgbuffer[0];
-                    float converted = 1.7 * (9462 / (val - 16.92));
+                    float actual_volt = val * 0.0032226;
+                    //val = 1.4*(9462 / (val - 16.92));
+                    float converted = 61.337 * pow(actual_volt, -1.209);
+                    //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
                     unsigned char buff[10];
                     int n;
@@ -577,14 +583,14 @@ void main(void) {
                 {
                     unsigned short int val = msgbuffer[1];
                     val = (val << 8 ) | msgbuffer[0];
-                    /*Change the formula*/
+                    float actual_volt = val * 0.0032226;
+                    //val = 1.4*(9462 / (val - 16.92));
+                    float converted = 23.339 * pow(actual_volt, -0.925);
                     //float converted = 1.7 * (9462 / (val - 16.92));
-                    float converted = 27 / val;
                     unsigned short int trunc = (int)converted;
-                    unsigned char buff[50];
+                    unsigned char buff[10];
                     int n;
-                    //n = sprintf(buff, "%d:3\r\n", trunc);
-                    n = sprintf(buff, "%d:3\r\n", 17);
+                    n = sprintf(buff, "%d:4\r\n", trunc);
                     uart_tx_bytes(buff, n);
 
                     sensor_array[3].data = trunc;
@@ -614,14 +620,14 @@ void main(void) {
                 {
                     unsigned short int val = msgbuffer[1];
                     val = (val << 8 ) | msgbuffer[0];
-                    /*Change the formula*/
+                    float actual_volt = val * 0.0032226;
+                    //val = 1.4*(9462 / (val - 16.92));
+                    float converted = 23.339 * pow(actual_volt, -0.925);
                     //float converted = 1.7 * (9462 / (val - 16.92));
-                    float converted = 27 / val;
                     unsigned short int trunc = (int)converted;
                     unsigned char buff[10];
                     int n;
-                    //n = sprintf(buff, "%d:4\r\n", trunc);
-                    n = sprintf(buff, "%d:4\r\n", 18);
+                    n = sprintf(buff, "%d:5\\r\n", trunc);
                     uart_tx_bytes(buff, n);
 
                     sensor_array[4].data = trunc;

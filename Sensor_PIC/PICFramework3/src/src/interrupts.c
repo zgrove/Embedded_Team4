@@ -124,15 +124,17 @@ void InterruptHandlerHigh() {
             ToMainHigh_sendmsg(2, MSGT_AD_DATA2, &a_d_result);
         else if (ADCON0bits.CHS == 0x2)
             ToMainHigh_sendmsg(2, MSGT_AD_DATA3, &a_d_result);
-        else if (ADCON0bits.CHS == 0x3)
-            ToMainHigh_sendmsg(2, MSGT_AD_DATA4, &a_d_result);
         else if (ADCON0bits.CHS == 0x4)
+            ToMainHigh_sendmsg(2, MSGT_AD_DATA4, &a_d_result);
+        else if (ADCON0bits.CHS == 0x5)
             ToMainHigh_sendmsg(2, MSGT_AD_DATA5, &a_d_result);
         
         /*Change analog input*/
         /*Will need to change this if more analog sensors are used*/
-        if (ADCON0bits.CHS == 0x4)
+        if (ADCON0bits.CHS == 0x5)
             ADCON0bits.CHS = 0x0;
+        else if (ADCON0bits.CHS == 0x2)
+            ADCON0bits.CHS = 0x4;
         else
             ADCON0bits.CHS++;
     }

@@ -10,7 +10,7 @@ void init_ad() {
     // Set voltage reference config bits
     // V_SS = 0  V_REF- = 1
     ADCON1bits.VCFG1 = 0;
-    // V_SS = 1  V_REF+ = 1
+    // V_DD = 0  V_REF+ = 1
     ADCON1bits.VCFG0 = 0;
 
     // Select A/D input channel

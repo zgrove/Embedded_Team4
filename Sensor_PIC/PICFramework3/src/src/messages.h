@@ -2,7 +2,7 @@
 #define __messages
 
 // The maximum length (in bytes) of a message
-#define MSGLEN 6
+#define MSGLEN 5
 
 // The maximum number of messages in a single queue
 #define MSGQUEUELEN 10
