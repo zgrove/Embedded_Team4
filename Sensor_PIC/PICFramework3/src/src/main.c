@@ -472,6 +472,8 @@ void main(void) {
                     float actual_volt = val * 0.0032226;
                     //val = 1.4*(9462 / (val - 16.92));
                     float converted = 61.337 * pow(actual_volt, -1.209);
+                    if (converted > 150 || converted == 0)
+                        converted = 255;
                     //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
                     unsigned char buff[10];
@@ -512,6 +514,8 @@ void main(void) {
                     float actual_volt = val * 0.0032226;
                     //val = 1.4*(9462 / (val - 16.92));
                     float converted = 61.337 * pow(actual_volt, -1.209);
+                    if (converted > 150 || converted == 0)
+                        converted = 255;
                     //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
                     unsigned char buff[10];
@@ -549,6 +553,8 @@ void main(void) {
                     float actual_volt = val * 0.0032226;
                     //val = 1.4*(9462 / (val - 16.92));
                     float converted = 61.337 * pow(actual_volt, -1.209);
+                    if (converted > 150 || converted == 0)
+                        converted = 255;
                     //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
                     unsigned char buff[10];
@@ -586,6 +592,8 @@ void main(void) {
                     float actual_volt = val * 0.0032226;
                     //val = 1.4*(9462 / (val - 16.92));
                     float converted = 23.339 * pow(actual_volt, -0.925);
+                    if (converted > 75 || converted == 0)
+                        converted = 255;
                     //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
                     unsigned char buff[10];
@@ -623,11 +631,13 @@ void main(void) {
                     float actual_volt = val * 0.0032226;
                     //val = 1.4*(9462 / (val - 16.92));
                     float converted = 23.339 * pow(actual_volt, -0.925);
+                    if (converted > 75 || converted == 0)
+                        converted = 255;
                     //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
                     unsigned char buff[10];
                     int n;
-                    n = sprintf(buff, "%d:5\\r\n", trunc);
+                    n = sprintf(buff, "%d:5\r\n", trunc);
                     uart_tx_bytes(buff, n);
 
                     sensor_array[4].data = trunc;

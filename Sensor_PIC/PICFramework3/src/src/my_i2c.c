@@ -168,9 +168,7 @@ void i2c_int_handler() {
                             // don't let the clock stretching bit be let go
                             data_read = 0;
 
-                            //from high recv -> ic_ptr->outbuffer
-                            //if (MSGQUEUE_EMPTY) send NULL DATA
-                            FromMainHigh_recvmsg(MSGLEN, &msgtype, ic_ptr->outbuffer);
+                            
                         }
                     } else {
                         ic_ptr->error_count++;
@@ -263,6 +261,22 @@ void i2c_int_handler() {
         ic_ptr->error_count = 0;
     }
     if (msg_to_send) {
+        //from high recv -> ic_ptr->outbuffer
+        struct message msg;
+        signed char length;
+        length = FromMainHigh_recvmsg(MSGLEN, &msgtype, ic_ptr->outbuffer);
+        if (length > 0)
+        {
+            start_i2c_slave_reply(length, ic_ptr->outbuffer);
+        }
+        else
+        {
+            init_msg(&msg);
+            set_msg_empty(&msg);
+            add_msg_crc(&msg);
+            start_i2c_slave_reply(sizeof(struct message), &msg);
+        }
+        
         
         msg_to_send = 0;
     }
