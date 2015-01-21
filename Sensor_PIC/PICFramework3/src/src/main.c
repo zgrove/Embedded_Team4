@@ -591,8 +591,9 @@ void main(void) {
                     val = (val << 8 ) | msgbuffer[0];
                     float actual_volt = val * 0.0032226;
                     //val = 1.4*(9462 / (val - 16.92));
-                    float converted = 23.339 * pow(actual_volt, -0.925);
-                    if (converted > 75 || converted == 0)
+                    float converted = 56.67 * pow(actual_volt, -1.053);
+                    ////float converted = 23.339 * pow(actual_volt, -0.925);
+                    if (converted > 60 || converted == 0)
                         converted = 255;
                     //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
@@ -630,8 +631,9 @@ void main(void) {
                     val = (val << 8 ) | msgbuffer[0];
                     float actual_volt = val * 0.0032226;
                     //val = 1.4*(9462 / (val - 16.92));
-                    float converted = 23.339 * pow(actual_volt, -0.925);
-                    if (converted > 75 || converted == 0)
+                    float converted = 57.815 * pow(actual_volt, -1.092);
+                    ////float converted = 23.339 * pow(actual_volt, -0.925);
+                    if (converted > 60 || converted == 0)
                         converted = 255;
                     //float converted = 1.7 * (9462 / (val - 16.92));
                     unsigned short int trunc = (int)converted;
@@ -652,7 +654,7 @@ void main(void) {
                         set_msg_empty(& msg);
                     }
                     else {
-                        set_msg_data(& msg, sensor_array[2].data);
+                        set_msg_data(& msg, sensor_array[4  ].data);
                         sensor_array[4].empty = 1;
                     }
                     set_msg_code(& msg, MSG_CODE_IR5);

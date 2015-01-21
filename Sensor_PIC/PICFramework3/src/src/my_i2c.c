@@ -139,6 +139,9 @@ void i2c_int_handler() {
                         msg_to_send = 1;
                     }
                 }
+                else {
+                    SSPCON1bits.CKP = 1;
+                }
                 break;
             }
             case I2C_STARTED:
@@ -186,7 +189,12 @@ void i2c_int_handler() {
                     data_written = 1;
                 } else {
                     // we have nothing left to send
-                    ic_ptr->status = I2C_IDLE;
+                    if (SSPSTATbits.P)
+                        ic_ptr->status = I2C_IDLE;
+                    else
+                        ic_ptr->status = I2C_WAIT_STOP;
+                    //ic_ptr->status = I2C_IDLE;
+                    SSPCON1bits.CKP = 1;
                 }
                 break;
             }
@@ -231,6 +239,11 @@ void i2c_int_handler() {
                 }
                 break;
             }
+            case I2C_WAIT_STOP:
+                if (SSPSTATbits.P)
+                    ic_ptr->status = I2C_IDLE;
+                SSPCON1bits.CKP = 1;
+                break;
         }
     }
 

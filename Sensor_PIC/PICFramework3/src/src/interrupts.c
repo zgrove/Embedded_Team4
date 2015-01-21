@@ -133,7 +133,7 @@ void InterruptHandlerHigh() {
         /*Will need to change this if more analog sensors are used*/
         if (ADCON0bits.CHS == 0x5)
             ADCON0bits.CHS = 0x0;
-        else if (ADCON0bits.CHS == 0x2)
+        else if (ADCON0bits.CHS == 0x0)
             ADCON0bits.CHS = 0x4;
         else
             ADCON0bits.CHS++;
